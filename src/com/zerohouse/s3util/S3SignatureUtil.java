@@ -26,7 +26,7 @@ public class S3SignatureUtil {
             "[\"starts-with\", \"$Content-Type\", \"%s\"], {\"x-amz-meta-uuid\": \"%s\"}, {\"x-amz-CREDENTIAL\": \"%s\"}, " +
             "{\"x-amz-algorithm\": \"AWS4-HMAC-SHA256\"},{\"x-amz-date\": \"%s\"},[\"content-length-range\", 0, %d]]}";
 
-    S3Signature getSignature(String contentType, String filePath, Date expired, Long size) throws Exception {
+    public S3Signature getSignature(String contentType, String filePath, Date expired, Long size) throws Exception {
         Date now = new Date();
         SimpleDateFormat expiredFormat = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss'Z'");
         SimpleDateFormat createTime = new SimpleDateFormat("YYYYMMdd");
