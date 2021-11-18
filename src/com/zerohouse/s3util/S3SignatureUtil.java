@@ -42,6 +42,24 @@ public class S3SignatureUtil {
         return new S3Signature(String.format("%s.%s.amazonaws.com", bucketName, S3), filePath, contentType, credential, stringToSigned, signature, uuid, amzDate);
     }
 
+    public S3Signature getSignature(String contentType, String filePath, Date expired, Long size, String acl) throws Exception {
+        Date now = new Date();
+        SimpleDateFormat expiredFormat = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss'Z'");
+        SimpleDateFormat createTime = new SimpleDateFormat("YYYYMMdd");
+        SimpleDateFormat amz_date = new SimpleDateFormat("YYYYMMdd'T'HHmmss'Z'");
+        String credTime = createTime.format(now);
+        String amzDate = amz_date.format(now);
+        String uuid = UUID.randomUUID().toString();
+        String credential = getCredential(accessKey, credTime, regions.getName(), S3);
+        String stringToSigned = getStringToSign(expiredFormat.format(expired), credential, amzDate, filePath, uuid, contentType, size, acl);
+        byte[] signKey;
+        signKey = getSignatureKey(credTime);
+        String signature = bytesToHex(hmacSHA256(stringToSigned, signKey));
+        S3Signature s3 = new S3Signature(String.format("%s.%s.amazonaws.com", bucketName, S3), filePath, contentType, credential, stringToSigned, signature, uuid, amzDate);
+        s3.acl = acl;
+        return s3;
+    }
+
     private byte[] getSignatureKey(String yyyymmdd) throws Exception {
         byte[] kSecret = ("AWS4" + secretKey).getBytes("UTF8");
         byte[] kDate = hmacSHA256(yyyymmdd, kSecret);
@@ -85,6 +103,11 @@ public class S3SignatureUtil {
 
     private String getCredential(String accessKeyId, String credTime, String region, String serviceName) {
         return String.format(CREDENTIAL, accessKeyId, credTime, region, serviceName);
+    }
+
+    private String getStringToSign(String expired, String credential, String amz_time, String filePath, String uuid, String contentType, Long size, String acl) {
+        String json = uploadPolicy(expired, credential, amz_time, filePath, contentType, uuid, size).replace("public-read", acl);
+        return new String(Base64.encodeBase64(json.getBytes()));
     }
 
     private String getStringToSign(String expired, String credential, String amz_time, String filePath, String uuid, String contentType, Long size) {
