@@ -39,7 +39,7 @@ public class S3SignatureUtil {
         byte[] signKey;
         signKey = getSignatureKey(credTime);
         String signature = bytesToHex(hmacSHA256(stringToSigned, signKey));
-        return new S3Signature(String.format("%s.%s.amazonaws.com", bucketName, S3), filePath, contentType, credential, stringToSigned, signature, uuid, amzDate);
+        return new S3Signature(String.format("%s.%s.%s.amazonaws.com", bucketName, S3, this.regions.getName()), filePath, contentType, credential, stringToSigned, signature, uuid, amzDate);
     }
 
     public S3Signature getSignature(String contentType, String filePath, Date expired, Long size, String acl) throws Exception {
